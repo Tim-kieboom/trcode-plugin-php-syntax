@@ -1,0 +1,231 @@
+id = "php-syntax"
+name = "PHP"
+version = "0.0.1"
+abi = "1.12"
+# A language and nothing else: no module of its own and no pane. The grammar is the file the
+# installer downloads and checks.
+
+[language]
+name = "PHP"
+grammar = "php.wasm"
+extensions = ["php", "phtml"]
+comment = "//"
+# The query is the grammar's own (queries/highlights.scm of https://github.com/tree-sitter/tree-sitter-php, v0.25.2 (c1e1349)).
+# The patterns are in the opposite order of the grammar's file: TerminalCode takes the first of two
+# patterns on the same text, and that file is written for the last (as Neovim and Zed take it).
+highlights = '''
+((name) @variable.builtin
+ (#eq? @variable.builtin "this"))
+
+(comment) @comment
+
+(float) @number
+
+(integer) @number
+
+(null) @constant.builtin
+
+(boolean) @constant.builtin
+
+; Basic tokens
+[
+  (string)
+  (string_content)
+  (encapsed_string)
+  (heredoc)
+  (heredoc_body)
+  (nowdoc_body)
+] @string
+
+(member_access_expression
+  name: (name) @property)
+
+(member_access_expression
+  name: (variable_name (name)) @property)
+
+; Member
+
+(property_element
+  (variable_name) @property)
+
+(function_definition
+  name: (name) @function)
+
+(member_call_expression
+  name: (name) @function.method)
+
+(scoped_call_expression
+  name: (name) @function)
+
+(function_call_expression
+  function: [
+    (qualified_name (name))
+    (relative_name (name))
+    (name)
+  ] @function)
+
+(method_declaration
+  name: (name) @function.method)
+
+(exit_statement "exit" @function.builtin "(")
+
+(list_literal "list" @function.builtin)
+
+; Functions
+
+(array_creation_expression "array" @function.builtin)
+
+(scoped_call_expression
+  scope: [
+    (name) @type
+    (qualified_name (name) @type)
+    (relative_name (name) @type)
+  ])
+
+(named_type (name) @type.builtin
+  (#any-of? @type.builtin "static" "self"))
+
+(named_type [
+  (name) @type
+  (qualified_name (name) @type)
+  (relative_name (name) @type)
+]) @type
+
+(cast_type) @type.builtin
+
+; Types
+
+(primitive_type) @type.builtin
+
+(const_declaration (const_element (name) @constant))
+
+((name) @constant.builtin
+ (#match? @constant.builtin "^__[A-Z][A-Z\d_]+__$"))
+
+((name) @constant
+ (#match? @constant "^_?[A-Z][A-Z\\d_]+$"))
+
+(object_creation_expression [
+  (name) @constructor
+  (qualified_name (name) @constructor)
+  (relative_name (name) @constructor)
+])
+
+(method_declaration name: (name) @constructor
+  (#eq? @constructor "__construct"))
+
+(variable_name) @variable
+
+; Variables
+
+(relative_scope) @variable.builtin
+
+(relative_name "namespace" @keyword)
+
+(namespace_use_clause
+  type: "const"
+  [
+    (name) @constant
+    (qualified_name
+      (name) @constant)
+    alias: (name) @constant
+  ])
+
+(namespace_use_clause
+  type: "function"
+  [
+    (name) @function
+    (qualified_name
+      (name) @function)
+    alias: (name) @function
+  ])
+
+(namespace_use_clause
+  [
+    (name) @type
+    (qualified_name
+      (name) @type)
+    alias: (name) @type
+  ])
+
+(namespace_name
+  (name) @namespace)
+
+; Namespace
+
+(namespace_definition
+  name: (namespace_name
+    (name) @namespace))
+
+(function_static_declaration "static" @keyword)
+
+; Keywords
+
+[
+  "and"
+  "as"
+  "break"
+  "case"
+  "catch"
+  "class"
+  "clone"
+  "const"
+  "continue"
+  "declare"
+  "default"
+  "do"
+  "echo"
+  "else"
+  "elseif"
+  "enddeclare"
+  "endfor"
+  "endforeach"
+  "endif"
+  "endswitch"
+  "endwhile"
+  "enum"
+  "exit"
+  "extends"
+  "finally"
+  "fn"
+  "for"
+  "foreach"
+  "function"
+  "global"
+  "goto"
+  "if"
+  "implements"
+  "include"
+  "include_once"
+  "instanceof"
+  "insteadof"
+  "interface"
+  "match"
+  "namespace"
+  "new"
+  "or"
+  "print"
+  "require"
+  "require_once"
+  "return"
+  "switch"
+  "throw"
+  "trait"
+  "try"
+  "use"
+  "while"
+  "xor"
+  "yield"
+  "yield from"
+  (abstract_modifier)
+  (final_modifier)
+  (readonly_modifier)
+  (static_modifier)
+  (visibility_modifier)
+] @keyword
+
+[
+  (php_tag)
+  (php_end_tag)
+] @keyword
+'''
